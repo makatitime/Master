@@ -9,9 +9,12 @@ def index(request):
 def register(request):
 
     if request.method == 'POST':
+
         forms = InfoForms(request.POST)
         if forms.is_valid():
-            pass
+            name = forms.cleaned_data()
+        else:
+            print '123'
     else:
         forms = InfoForms()
         return render(request,'register.html',{'forms':forms.as_table() })
