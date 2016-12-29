@@ -17,7 +17,7 @@ def register(request):
             print '123'
     else:
         forms = InfoForms()
-        return render(request,'register.html',{'forms':forms.as_table() })
+        return render(request,'register.html',{'forms':forms.as_table()})
 
 def login(request):
     return render(request,'login.html')
