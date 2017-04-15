@@ -153,3 +153,55 @@ class student(object):
 dl = student('dalong',23,[82,60,99])
 dl.get_name()
 
+一、有一个列表 l = [1,33,45,98,9,222,132,13]
+
+生成8个线程对象，每个线程输出一个值，最后结束的时候输出："End of program.".
+
+import  threading
+def test(l):
+    print l
+
+
+print "End of program."
+test(3)
+l = [1,33,45,98,9,222,132,13]
+t1 = threading.Thread(target=test, args=(5,))
+
+
+
+t1 = threading.Thread(target=run_thread, args=(5,))
+t1.start()
+t1.join()
+t2.join()
+
+#!/usr/bin/env  python
+import threading
+import urllib
+import urllib2
+import re
+
+l = [1,33,45,98,9,222,132,13]
+
+def test(i):
+		print i
+
+
+#print len(l)
+#print range(10)
+#for item in xrange(len(l)):
+for i in l:
+	t1 = threading.Thread(target=test,args=(i,))
+	t1.start()
+	t1.join()
+
+print "End of program."
+
+def gettitle(html):
+	print title
+urls = ['http://www.iplaypython.com', 'http://www.jd.com', 'http://www.taobao.com']
+for url in urls:
+	page = urllib.urlopen(url)
+	html = page.read().decode('utf-8')
+	print html
+
+
