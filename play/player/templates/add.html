@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+{% load static %}
+<link href="{% static "bootstrap3/css/bootstrap.min.css" %}" rel="stylesheet" type="text/css"/>
+<link href="{% static "bootstrap3/css/bootstrap-theme.min.css" %}" rel="stylesheet" type="text/css"/>
+<script src="{% static "bootstrap3/js/jquery-3.2.1.min.js" %}"></script>
+<script src="{% static "bootstrap3/js/bootstrap.min.js" %}"></script>
+ <title>添加文章</title>
+<body>
+
+<form action="" method="post" >
+    {% csrf_token %}
+    <p>作者:<input type="text" name="author"></p>
+    <p>标题:<input type="text" name="title"></p>
+    <textarea rows="10" cols="30" name="content">
+我是一个文本框。
+</textarea>
+    <input type="submit" value="提交">
+</form>
+{{ form }}
+</body>
+</html>
