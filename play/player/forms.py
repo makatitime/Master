@@ -1,11 +1,15 @@
 #--*-- coding:utf-8 --*--
 from django import  forms
+from .models import articles
 Gender_CHOICES = ('Man', 'Famel')
 FAVORITE_COLORS_CHOICES = (
     ('blue', 'Blues'),
     ('green', 'Green'),
     ('black', 'Black'),
 )
+vip_type = (
+    (0, u'普通用户'),
+    (1, u'高级用户'),)
 
 class ArtForms(forms.Form):
     name = forms.CharField(label='作者',required=True, max_length=100,error_messages={'required': '用户名不能为空', 'invalid': '名字不符合规范'})
@@ -21,3 +25,6 @@ class ArtForms(forms.Form):
         initial=1,  # 默认选中第二个option
         widget=forms.RadioSelect  # 插件表现形式为单选按钮
     )
+
+
+    vip = forms.CharField(widget=forms.widgets.Select(choices=articles.objects.all().values_list('id','author'), attrs={'class': 'form-control'}))
