@@ -1,10 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="zh-CN">
-{% load static %}
-<link href="{% static "bootstrap3/css/bootstrap.min.css" %}" rel="stylesheet" type="text/css"/>
-<link href="{% static "bootstrap3/css/bootstrap-theme.min.css" %}" rel="stylesheet" type="text/css"/>
-<script src="{% static "bootstrap3/js/jquery-3.2.1.min.js" %}"></script>
-<script src="{% static "bootstrap3/js/bootstrap.min.js" %}"></script>
+﻿{% include 'bas.html' %}
  <title>文章列表</title>
 <body>
 
@@ -19,7 +13,8 @@
 </div>
 {% for response in all_response %}
 
-<h5>ID:{{ response.id }}<br />
+<h5>ID:{{ response.id }}</h5><br />
+ <p>Email:{{ response.email }}</p><br />
 <h3 class="text-left text-warning">标题:{{ response.title }}
 <a>修改</a>
 <a>删除</a>

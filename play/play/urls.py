@@ -17,6 +17,7 @@ from django.contrib import admin
 # from player import views
 from player.views import *
 urlpatterns = [
+    url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$',index_page,name='index'),
     url(r'add_page/$',add_page,name='index'),

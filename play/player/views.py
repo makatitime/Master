@@ -18,13 +18,19 @@ def index_page(request):
 def add_page(request):
     if request.method == 'POST':
         form = ArtForms(request.POST)
-       # print form
-        at = form.cleaned_data['name']
-        tt = form.cleaned_data['title']
-        cc = form.cleaned_data['content']
-        ars = articles.objects.create(author=at,title=tt,content=cc)
-        ars.save()
-        return HttpResponseRedirect("/")
+        if form.is_valid():
+            #print form
+            at = form.cleaned_data['name']
+            tt = form.cleaned_data['title']
+            cc = form.cleaned_data['content']
+            mail = form.cleaned_data['email']
+            ars = articles.objects.create(author=at,title=tt,content=cc,email=mail)
+            ars.save()
+            return HttpResponseRedirect("/")
+        else:
+            er = form.errors
+            return render(request,'error.html',{'errs':er})
+            #return HttpResponse(form.errors.as_data())
     else:
         forms = ArtForms()
         return render(request,'add.html',{'form':forms.as_p()})
