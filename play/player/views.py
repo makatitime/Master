@@ -30,9 +30,19 @@ def  delete(request,id):
         #response.delete()
         return HttpResponse('Success')
 def  update(request,id):
-    response3 = articles.objects.filter(id=id)
-    #return HttpResponse(nid)
-    return render(request,'update.html',{'all_response':response3})
+    if request.method == 'POST':
+        at = request.POST['name']
+        tt = request.POST['title']
+        cc = request.POST['content']
+        mail = request.POST['email']
+        res = articles.objects.filter(id=id).update(author=at,title=tt,content=cc,email=mail)
+        if res == 1:
+            return HttpResponseRedirect('/')
+        else:
+            return HttpResponse('Fail')
+    else:
+        all_res = articles.objects.filter(id=id)
+        return render(request,'update.html',{'all_res':all_res})
 
 def add_page(request):
     if request.method == 'POST':

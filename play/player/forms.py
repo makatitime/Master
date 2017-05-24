@@ -28,4 +28,3 @@ class ArtForms(forms.Form):
     #
     #
     # vip = forms.CharField(widget=forms.widgets.Select(choices=articles.objects.all().values_list('id','author'), attrs={'class': 'form-control'}))
-    #
