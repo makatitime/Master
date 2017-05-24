@@ -1,0 +1,38 @@
+﻿{% include 'bas.html' %}
+ <title>文章列表</title>
+<body>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <form action="" method="post" >
+
+{% for respones3 in all_response %}
+                 <input type='hidden' name='csrfmiddlewaretoken' value='3ctWs7m6SYphgCGxXNhFuzzFn8Zd9vCH' />
+                    <p><label for="id_name">作者:</label> <input id="id_name" maxlength="100" name="name" type="text" value="{{ respones3.author }}" /></p>
+<p><label for="id_title">标题:</label> <input id="id_title" maxlength="100" name="title" type="text" value="{{ respones3.title }}"/></p>
+<p><label for="id_email">Email:</label> <input id="id_email" maxlength="50" name="email" type="email" value="{{ respones3.email }}" /></p>
+<p> <textarea cols="40" id="id_content" name="content" rows="10" >{{ respones3.content }}
+</textarea></p>
+            <input type="submit" class="btn btn-primary btn-md" value="提交">
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endfor %}
+{#<table>#}
+{##}
+{#    {% for key, value in meta %}#}
+{#<tr>#}
+{#<td><strong>{{ key }}</strong></td>#}
+{#    <td>{{ value }} </td>#}
+{##}
+{#</tr>#}
+{#        {% endfor %}#}
+{#</table>#}
+
+</body>
+</html>

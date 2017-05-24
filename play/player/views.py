@@ -29,7 +29,10 @@ def  delete(request,id):
     else:
         #response.delete()
         return HttpResponse('Success')
-
+def  update(request,id):
+    response3 = articles.objects.filter(id=id)
+    #return HttpResponse(nid)
+    return render(request,'update.html',{'all_response':response3})
 
 def add_page(request):
     if request.method == 'POST':

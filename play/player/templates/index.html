@@ -16,7 +16,8 @@
 <h5>ID:{{ response.id }}</h5><br />
  <p>Email:{{ response.email }}</p><br />
 <h3 class="text-left text-warning">标题:<a href="/detail-{{ response.id }}.html">{{ response.title }}
-<a>修改</a>
+<a href="update-{{ response.id }}">修改</a>
+
 <a href="delete-{{ response.id }}">删除</a>
 </h3>
 <p class="text-center text-danger">内容:{{ response.content }}</p>
