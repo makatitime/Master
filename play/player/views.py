@@ -14,6 +14,22 @@ import hashlib
 def index_page(request):
     response3 = articles.objects.all()
     return render(request,'index.html',{'all_response':response3})
+def  detail(request,nid):
+    response3 = articles.objects.filter(id=nid)
+    #return HttpResponse(nid)
+    return render(request,'index.html',{'all_response':response3})
+def  delete(request,id):
+    response = articles.objects.filter(id=id)
+    print len(response)
+    response3 = response.delete()
+    print len(response)
+    #print response3
+    if  len(response) == 0:
+        return HttpResponse('Fail')
+    else:
+        #response.delete()
+        return HttpResponse('Success')
+
 
 def add_page(request):
     if request.method == 'POST':

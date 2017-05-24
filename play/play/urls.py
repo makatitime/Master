@@ -20,5 +20,7 @@ urlpatterns = [
     url(r'^grappelli/', include('grappelli.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$',index_page,name='index'),
+    url(r'^detail-(?P<nid>\d+).html/', detail),
+    url(r'^delete-(?P<id>\d+)/', delete),
     url(r'add_page/$',add_page,name='index'),
 ]
