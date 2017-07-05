@@ -6,6 +6,7 @@ from django.db import models
 http://www.mobile-open.com/2016/105967.html
 https://www.gitbook.com/book/wizardforcel/django-design-patterns-and-best-practices/details
 http://www.jianshu.com/p/22d55fe44bdc
+https://github.com/yangyangwithgnu/hardseed
 本地模型用到的字段类型和和参数的含义
 max_length：最大长度
 blank：True可以为空
