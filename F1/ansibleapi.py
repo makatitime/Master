@@ -25,27 +25,29 @@ class ResultCallback(CallbackBase):
         host = result._host
         print json.dumps({host.name: result._result}, indent=4)
 
-Options = namedtuple('Options', ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check'])
+web = ['222.186.169.221','222.186.169.222']
+Options = namedtuple('Options', ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check', 'private_key_file'])
+
 # initialize needed objects
 variable_manager = VariableManager()
+variable_manager.extra_vars = {'ansible_password':'123456','ansible_ssh_user':'automan'}
 loader = DataLoader()
-options = Options(connection='local', module_path='/path/to/mymodules', forks=100, become=None, become_method=None, become_user=None, check=False)
-passwords = dict(vault_pass='123456')
+options = Options(connection='paramiko', module_path='/usr/lib/python2.7/site-packages/ansible/modules/', forks=100, become=True, become_method='sudo', become_user='automan', check=False, private_key_file='/home/automan/.ssh/id_rsa')
+passwords = dict(vault_pass='')
 
 # Instantiate our ResultCallback for handling results as they come in
 results_callback = ResultCallback()
 
 # create inventory and pass to var manager
-inventory = Inventory(loader=loader, variable_manager=variable_manager, host_list='localhost')
+inventory = Inventory(loader=loader, variable_manager=variable_manager, host_list=web)
 variable_manager.set_inventory(inventory)
-
 # create play with tasks
 play_source =  dict(
         name = "Ansible Play",
-        hosts = 'localhost',
+        hosts = web,
         gather_facts = 'no',
         tasks = [
-            dict(action=dict(module='shell', args='ls'), register='shell_out'),
+            dict(action=dict(module='setup', args=''), register='shell_out'),
             dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}')))
          ]
     )
