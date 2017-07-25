@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # -*- coding:utf-8 -*-
 # 描述:
 # V1 WZJ 2016-12-19 PlayBook重写封装api基本功能
