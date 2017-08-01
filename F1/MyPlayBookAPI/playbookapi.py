@@ -13,13 +13,7 @@ from ansible.executor.task_queue_manager import TaskQueueManager
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.utils.ssh_functions import check_for_controlpersist
 
-# 调用自定义Inventory
-from inventory import YunweiInventory as Inventory
-try:
-    from __main__ import display
-except ImportError:
-    from ansible.utils.display import Display
-    display = Display()
+
 
 
 class YunweiPlaybookExecutor(PlaybookExecutor):
@@ -129,7 +123,7 @@ class PlayBookJob(object):
         playbooks            = self.playbooks,
         inventory            = self.inventory,
         variable_manager     = self.variable_manager,
-        loader               = self.loader,
+        loader               = self.loade                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        r,
         options              = self.options,
         passwords            = self.passwords,
         stdout_callback      = self.callback

@@ -1,5 +1,10 @@
+#!/usr/bin/env python
+# -*- coding:utf-8 -*-
+# Ansible Playbook  API
+
 import os
 from tempfile import NamedTemporaryFile
+from ansible import constants as C
 from ansible.inventory import Inventory
 from ansible.vars import VariableManager
 from ansible.parsing.dataloader import DataLoader
