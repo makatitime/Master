@@ -1,69 +1,236 @@
-#!/usr/bin/env  python
+#!/usr/bin/env python
 # -*- coding:utf-8 -*-
-# 描述:
-# V1 WZJ 2016-12-20
+# Ansible API
+
+import json
+from ansible import constants as C
 from collections import namedtuple
+from ansible.inventory import Inventory
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
-from ansible.inventory import Inventory
+# from ansible.playbook.play import Play
+from ansible.executor.task_queue_manager import TaskQueueManager
+from ansible.executor import playbook_executor
 from ansible.executor.playbook_executor import PlaybookExecutor
+from ansible.utils.ssh_functions import check_for_controlpersist
+from ansible.plugins.callback.json import CallbackModule
+from ansible.utils.display import Display
+from ansible.plugins.callback import CallbackBase
 
-# 用来加载解析yaml文件或JSON内容,并且支持vault的解密
-loader = DataLoader()
 
-# 管理变量的类，包括主机，组，扩展等变量，之前版本是在 inventory中的
-variable_manager = VariableManager()
+class mycallback(CallbackBase):
+    # 这里是状态回调，各种成功失败的状态,里面的各种方法其实都是从写于CallbackBase父类里面的，其实还有很多，可以根据需要拿出来用
+    def __init__(self, *args):
+        super(mycallback, self).__init__(display=None)
+        self.status_ok = json.dumps({})
+        self.status_fail = json.dumps({})
+        self.status_unreachable = json.dumps({})
+        self.status_playbook = ''
+        self.status_no_hosts = False
+        self.host_ok = {}
+        self.host_failed = {}
+        self.host_unreachable = {}
 
-# 根据inventory加载对应变量,此处host_list参数可以有两种格式：
-# 1: hosts文件(需要),
-# 2: 可以是IP列表,此处使用IP列表
-inventory = Inventory(loader=loader, variable_manager=variable_manager,host_list=['172.16.1.121'])
-variable_manager.set_inventory(inventory)
+    def v2_runner_on_ok(self, result):
+        host = result._host.get_name()
+        self.runner_on_ok(host, result._result)
+        # self.status_ok=json.dumps({host:result._result},indent=4)
+        self.host_ok[host] = result
 
-# 设置密码,需要是dict类型
-passwords=dict(conn_pass='your password')
+    def v2_runner_on_failed(self, result, ignore_errors=False):
+        host = result._host.get_name()
+        self.runner_on_failed(host, result._result, ignore_errors)
+        # self.status_fail=json.dumps({host:result._result},indent=4)
+        self.host_failed[host] = result
 
-# 初始化需要的对象
-Options = namedtuple('Options',
-                     ['connection',
-                      'remote_user',
-                      'ask_sudo_pass',
-                      'verbosity',
-                      'ack_pass',
-                      'module_path',
-                      'forks',
-                      'become',
-                      'become_method',
-                      'become_user',
-                      'check',
-                      'listhosts',
-                      'listtasks',
-                      'listtags',
-                      'syntax',
-                      'sudo_user',
-                      'sudo'])
-# 初始化需要的对象
-options = Options(connection='smart',
-                       remote_user='root',
-                       ack_pass=None,
-                       sudo_user='root',
-                       forks=5,
-                       sudo='yes',
-                       ask_sudo_pass=False,
-                       verbosity=5,
-                       module_path=None,
-                       become=True,
-                       become_method='sudo',
-                       become_user='root',
-                       check=None,
-                       listhosts=None,
-                       listtasks=None,
-                       listtags=None,
-                       syntax=None)
+    def v2_runner_on_unreachable(self, result):
+        host = result._host.get_name()
+        self.runner_on_unreachable(host, result._result)
+        # self.status_unreachable=json.dumps({host:result._result},indent=4)
+        self.host_unreachable[host] = result
 
-# playbooks就填写yml文件即可,可以有多个,以列表形式
-playbook = PlaybookExecutor(playbooks=['/tmp/xx.yml'],inventory=inventory,
-              variable_manager=variable_manager,
-              loader=loader,options=options,passwords=passwords)
-# 开始执行
-playbook.run()
+    def v2_playbook_on_no_hosts_matched(self):
+        self.playbook_on_no_hosts_matched()
+        self.status_no_hosts = True
+
+    def v2_playbook_on_play_start(self, play):
+        self.playbook_on_play_start(play.name)
+        self.playbook_path = play.name
+
+
+class ResultCallback(CallbackBase):
+    """A sample callback plugin used for performing an action as results come in
+
+    If you want to collect all results into a single object for processing at
+    the end of the execution, look into utilizing the ``json`` callback plugin
+    or writing your own custom callback plugin
+    """
+
+    def v2_runner_on_ok(self, result, **kwargs):
+        """Print a json representation of the result
+
+        This method could store the result in an instance attribute for retrieval later
+        """
+        host = result._host
+        print json.dumps({host.name: result._result}, indent=4)
+
+
+class NewPlaybookExecutor(PlaybookExecutor):
+    '''重写PlayBookExecutor 加入回调(不是很明白原作者心里想法这个剧本函数居然不加回调参数）'''
+
+    def __init__(self, playbooks, inventory, variable_manager, loader, options, passwords, stdout_callback=None):
+        self._playbooks = playbooks
+        self._inventory = inventory
+        self._variable_manager = variable_manager
+        self._loader = loader
+        self._options = options
+        self.passwords = passwords
+        self._unreachable_hosts = dict()
+
+        if options.listhosts or options.listtasks or options.listtags or options.syntax:
+            self._tqm = None
+        else:
+            self._tqm = TaskQueueManager(inventory=inventory, variable_manager=variable_manager, loader=loader,
+                                         options=options, passwords=self.passwords, stdout_callback=stdout_callback)
+
+        # Note: We run this here to cache whether the default ansible ssh
+        # executable supports control persist.  Sometime in the future we may
+        # need to enhance this to check that ansible_ssh_executable specified
+        # in inventory is also cached.  We can't do this caching at the point
+        # where it is used (in task_executor) because that is post-fork and
+        # therefore would be discarded after every task.
+        check_for_controlpersist(C.ANSIBLE_SSH_EXECUTABLE)
+
+
+class PlayBookApi(object):
+    '''封装作为外放调用接口'''
+
+    def __init__(self, playbooks, host_list, ssh_user, private_key_file, ext_vars, passwords='null', ack_pass=False,
+                 forks=10, verbosity=0):
+        '''
+        :param playbook:
+        :param host_list: 主机列表
+        :param passwords: 存放认证信息
+        :param data: 用于传递额外参数
+        :param verbosity: 日志级别
+        '''
+        # 初始化一些自定义的变量
+        self.playbooks = playbooks
+        self.host_list = host_list
+        self.ssh_user = ssh_user
+        self.passwords = dict(vault_pass=passwords)
+        self.ack_pass = ack_pass
+        self.forks = forks
+        self.connection = 'paramiko'
+        self.ext_vars = ext_vars
+        self.verbosity = verbosity
+        self.display = Display()
+
+        # 用来加载解析yaml文件或JSON内容,并且支持vault的解密
+        self.loader = DataLoader()
+        # 管理变量的类，包括主机，组，扩展等变量，之前版本是在 inventory中的
+        self.variable_manager = VariableManager()
+        self.variable_manager.extra_vars = self.ext_vars
+        # 根据inventory加载对应变量
+        self.inventory = Inventory(loader=self.loader, variable_manager=self.variable_manager, host_list=self.host_list)
+
+        self.variable_manager.set_inventory(self.inventory)
+        # 回调返回格式Json值
+        # self.callback = CallbackModule()
+        # result_all = self.get_result()
+        # return result_all
+
+        # 初始化需要的对象1
+        self.Options = namedtuple('Options',
+                                  ['connection',
+                                   'remote_user',
+                                   'ask_sudo_pass',
+                                   'verbosity',
+                                   'ack_pass',
+                                   'module_path',
+                                   'forks',
+                                   'become',
+                                   'become_method',
+                                   'become_user',
+                                   'check',
+                                   'listhosts',
+                                   'listtasks',
+                                   'listtags',
+                                   'syntax',
+                                   'sudo_user',
+                                   'sudo'
+                                   ])
+
+        # 初始化需要的对象2
+        self.options = self.Options(connection=self.connection,
+                                    remote_user=self.ssh_user,
+                                    ack_pass=self.ack_pass,
+                                    sudo_user=self.ssh_user,
+                                    forks=self.forks,
+                                    sudo='yes',
+                                    ask_sudo_pass=False,
+                                    verbosity=self.verbosity,
+                                    module_path=None,
+                                    become=True,
+                                    become_method='sudo',
+                                    become_user='root',
+                                    check=None,
+                                    listhosts=None,
+                                    listtasks=None,
+                                    listtags=None,
+                                    syntax=None
+                                    )
+
+        self.Runner()
+
+    def Runner(self):
+        self.pbex = PlaybookExecutor(
+            playbooks=self.playbooks,
+            inventory=self.inventory,
+            variable_manager=self.variable_manager,
+            loader=self.loader,
+            options=self.options,
+            passwords=self.passwords
+            #    stdout_callback=self.callback
+        )
+        self.results_callback = mycallback()
+        self.pbex._tqm._stdout_callback = self.results_callback
+        results = self.pbex.run()
+        return results
+
+    # pbex._tqm._stdout_callback = self.results_callback
+    # result = pbex.run()
+    # print dir(result)
+    # return result
+
+    def get_result(self):
+        self.result_all = {'success': {}, 'fail': {}, 'unreachable': {}}
+        # print result_all
+        # print dir(self.callback)
+        for host, result in self.callback.host_ok.items():
+            self.result_all['success'][host] = result._result
+
+        for host, result in self.callback.host_failed.items():
+            self.result_all['failed'][host] = result._result['msg']
+
+        for host, result in self.callback.host_unreachable.items():
+            self.result_all['unreachable'][host] = result._result['msg']
+
+        for i in self.result_all['success'].keys():
+            print i, self.result_all['success'][i]
+        # print self.result_all['fail']
+        # print self.result_all['unreachable']
+
+        return self.result_all
+
+
+web = ['127.0.0.1']
+if __name__ == "__main__":
+    playbook = PlayBookApi(playbooks=['/opt/xx.yml'],
+                           host_list=web,
+                           ssh_user='automan',
+                           private_key_file='/home/automan/.ssh/id_rsa',
+                           verbosity=10,
+                           ext_vars={'ansible_password': '123456'}
+                           )
+    print playbook.get_result()
