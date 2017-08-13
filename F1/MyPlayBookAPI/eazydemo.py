@@ -18,6 +18,7 @@ from ansible.utils.display import Display
 from ansible.plugins.callback import CallbackBase
 
 
+
 class mycallback(CallbackBase):
     # 这里是状态回调，各种成功失败的状态,里面的各种方法其实都是从写于CallbackBase父类里面的，其实还有很多，可以根据需要拿出来用
     def __init__(self, *args):
@@ -32,15 +33,16 @@ class mycallback(CallbackBase):
         self.host_unreachable = {}
 
     def v2_runner_on_ok(self, result):
-        host = result._host.get_name()
+        #host = result._host.get_name()
+        host = result._host
         self.runner_on_ok(host, result._result)
-        # self.status_ok=json.dumps({host:result._result},indent=4)
+        #self.status_ok=json.dumps({host:result._result},indent=4)
         self.host_ok[host] = result
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
         host = result._host.get_name()
         self.runner_on_failed(host, result._result, ignore_errors)
-        # self.status_fail=json.dumps({host:result._result},indent=4)
+        self.status_fail=json.dumps({host:result._result},indent=4)
         self.host_failed[host] = result
 
     def v2_runner_on_unreachable(self, result):
@@ -56,50 +58,6 @@ class mycallback(CallbackBase):
     def v2_playbook_on_play_start(self, play):
         self.playbook_on_play_start(play.name)
         self.playbook_path = play.name
-
-
-class ResultCallback(CallbackBase):
-    """A sample callback plugin used for performing an action as results come in
-
-    If you want to collect all results into a single object for processing at
-    the end of the execution, look into utilizing the ``json`` callback plugin
-    or writing your own custom callback plugin
-    """
-
-    def v2_runner_on_ok(self, result, **kwargs):
-        """Print a json representation of the result
-
-        This method could store the result in an instance attribute for retrieval later
-        """
-        host = result._host
-        print json.dumps({host.name: result._result}, indent=4)
-
-
-class NewPlaybookExecutor(PlaybookExecutor):
-    '''重写PlayBookExecutor 加入回调(不是很明白原作者心里想法这个剧本函数居然不加回调参数）'''
-
-    def __init__(self, playbooks, inventory, variable_manager, loader, options, passwords, stdout_callback=None):
-        self._playbooks = playbooks
-        self._inventory = inventory
-        self._variable_manager = variable_manager
-        self._loader = loader
-        self._options = options
-        self.passwords = passwords
-        self._unreachable_hosts = dict()
-
-        if options.listhosts or options.listtasks or options.listtags or options.syntax:
-            self._tqm = None
-        else:
-            self._tqm = TaskQueueManager(inventory=inventory, variable_manager=variable_manager, loader=loader,
-                                         options=options, passwords=self.passwords, stdout_callback=stdout_callback)
-
-        # Note: We run this here to cache whether the default ansible ssh
-        # executable supports control persist.  Sometime in the future we may
-        # need to enhance this to check that ansible_ssh_executable specified
-        # in inventory is also cached.  We can't do this caching at the point
-        # where it is used (in task_executor) because that is post-fork and
-        # therefore would be discarded after every task.
-        check_for_controlpersist(C.ANSIBLE_SSH_EXECUTABLE)
 
 
 class PlayBookApi(object):
@@ -121,7 +79,8 @@ class PlayBookApi(object):
         self.passwords = dict(vault_pass=passwords)
         self.ack_pass = ack_pass
         self.forks = forks
-        self.connection = 'paramiko'
+        self.connection = 'local'
+        #self.connection = 'paramiko'
         self.ext_vars = ext_vars
         self.verbosity = verbosity
         self.display = Display()
@@ -194,43 +153,42 @@ class PlayBookApi(object):
             #    stdout_callback=self.callback
         )
         self.results_callback = mycallback()
+#        self.results_callback = CallbackModule()
         self.pbex._tqm._stdout_callback = self.results_callback
         results = self.pbex.run()
         return results
+        print dir(results)
 
-    # pbex._tqm._stdout_callback = self.results_callback
-    # result = pbex.run()
-    # print dir(result)
-    # return result
 
     def get_result(self):
+#	print result._result
         self.result_all = {'success': {}, 'fail': {}, 'unreachable': {}}
-        # print result_all
-        # print dir(self.callback)
-        for host, result in self.callback.host_ok.items():
+        #print self.result_all
+        #print dir(self.callback)
+        for host, result in self.results_callback.host_ok.items():
             self.result_all['success'][host] = result._result
-
-        for host, result in self.callback.host_failed.items():
+	    print  result._result
+        for host, result in self.results_callback.host_failed.items():
             self.result_all['failed'][host] = result._result['msg']
 
-        for host, result in self.callback.host_unreachable.items():
+        for host, result in self.results_callback.host_unreachable.items():
             self.result_all['unreachable'][host] = result._result['msg']
 
-        for i in self.result_all['success'].keys():
-            print i, self.result_all['success'][i]
+#        for i in self.result_all['success'].keys():
+#            print i, self.result_all['success'][i]
         # print self.result_all['fail']
         # print self.result_all['unreachable']
-
         return self.result_all
 
 
 web = ['127.0.0.1']
 if __name__ == "__main__":
-    playbook = PlayBookApi(playbooks=['/opt/xx.yml'],
+	playbook = PlayBookApi(playbooks=['test.yml'],
                            host_list=web,
                            ssh_user='automan',
                            private_key_file='/home/automan/.ssh/id_rsa',
                            verbosity=10,
                            ext_vars={'ansible_password': '123456'}
                            )
-    print playbook.get_result()
+	stats = playbook.get_result()
+    print stats
