@@ -19,7 +19,7 @@ from ansible.utils.ssh_functions import check_for_controlpersist
 class YunweiPlaybookExecutor(PlaybookExecutor):
 
     '''重写PlayBookExecutor'''
-    def __init__(self, playbooks, inventory, variable_manager, loader, options, passwords, stdout_callback=None):
+    def __init__(self, playbooks, inventory, variable_manager, loader, options, passwords):
         self._playbooks        = playbooks
         self._inventory        = inventory
         self._variable_manager = variable_manager
@@ -125,8 +125,8 @@ class PlayBookJob(object):
         variable_manager     = self.variable_manager,
         loader               = self.loade                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        r,
         options              = self.options,
-        passwords            = self.passwords,
-        stdout_callback      = self.callback
+        passwords            = self.passwords
+        #stdout_callback      = self.callback
     )
     result = pb.run()
 
