@@ -120,7 +120,7 @@ class PlaybookAPI(object):
         self.display = Display()
         self.display.verbosity = self.options.verbosity
         
-        self.passwords = dict(conn_pass='123456')
+        self.passwords = dict(conn_pass='123123')
         self.passwords = dict(vault_pass=passwords)
         # DataLoader, 负责数据解析
         # VariableManager, 负责存储各类变量
@@ -156,19 +156,14 @@ class PlaybookAPI(object):
         pbex.run()
 
 
-web = ['127.0.0.1']
+web = ['119.28.72.51']
 #demo
 if __name__ == "__main__":
-    PlaybookAPI(playbooks = ['/opt/xx.yml'],
+    PlaybookAPI(playbooks = ['xx.yml'],
                 host_list = web,
                 ssh_user = 'automan',
                 private_key_file = '/home/automan/.ssh/id_rsa',
                 verbosity=10,
-                ext_vars = {'ansible_password':'123456'}
+                ext_vars = {'ansible_password':'123'}
     )
-
-
-
-
-
 

@@ -19,3 +19,11 @@ def gettitle(url):
 for url in urls:
         t1 = threading.Thread(target=gettitle,args=(url,))
         t1.start()
+arr = [2,10,3,1,53,22,33,10,9]
+length = len(arr) - 1
+print length
+for i in range(length):
+    if arr[i] < arr[i+1]:
+        arr[i],arr[i+1] = arr[i+1],arr[i]
+
+    print arr

@@ -55,8 +55,8 @@ class YunweiPlaybookExecutor(PlaybookExecutor):
             # therefore would be discarded after every task.
 
 
-web = ['222.186.169.220', '222.186.169.221', '222.186.169.222']
-# web = ['222.186.169.220']
+
+web = ['119.28.72.51']
 
 Options = namedtuple('Options',
                      ['connection', 'module_path', 'forks', 'become', 'become_method', 'become_user', 'check',
@@ -64,7 +64,7 @@ Options = namedtuple('Options',
 
 # initialize needed objects
 variable_manager = VariableManager()
-variable_manager.extra_vars = {'ansible_password': '123456', 'ansible_ssh_user': 'automan'}
+variable_manager.extra_vars = {'ansible_password': '123123', 'ansible_ssh_user': 'automan'}
 loader = DataLoader()
 options = Options(connection='paramiko', module_path='/usr/lib/python2.7/site-packages/ansible/modules/', forks=100,
                   become=True, become_method='sudo', become_user='root', check=False,
@@ -80,7 +80,7 @@ inventory = Inventory(loader=loader, variable_manager=variable_manager, host_lis
 variable_manager.set_inventory(inventory)
 
 
-playbook = YunweiPlaybookExecutor(playbooks=['/opt/xx.yml'], inventory=inventory,
+playbook = YunweiPlaybookExecutor(playbooks=['xx.yml'], inventory=inventory,
                                   variable_manager=variable_manager,
                                   loader=loader, options=options,
                                   passwords=passwords,
